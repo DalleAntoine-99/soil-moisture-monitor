@@ -86,3 +86,12 @@ htmlcov/
 # Distribution
 *.tar.gz
 *.zip
+
+# ML data
+ml/data/raw/
+ml/data/processed/
+
+# Trained models
+models/*.pkl
+models/**/*.pkl
+
