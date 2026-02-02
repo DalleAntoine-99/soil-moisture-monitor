@@ -25,8 +25,7 @@ SAVE_DIR = os.getenv("SAVE_DIR", "plant_images")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 MQTT_TOPIC = os.getenv("MQTT_TOPIC", "v1/devices/me/telemetry")
 
-# HTTP image upload
-IMAGE_UPLOAD_URL = f"https://{THINGSBOARD_HOST}/api/v1/{ACCESS_TOKEN}/attributes"
+# (image HTTP upload disabled - sending telemetry only)
 
 # =========================
 # SETUP
@@ -39,15 +38,65 @@ client.username_pw_set(ACCESS_TOKEN)
 client.connect(THINGSBOARD_HOST, MQTT_PORT, 60)
 client.loop_start()
 
-# Webcam
-cap = cv2.VideoCapture(0)
-if not cap.isOpened():
-    print("❌ Cannot open webcam")
-    exit()
 
-print("📷 Webcam + IoT pipeline started")
+def process_capture(frame, timestamp):
+    """
+    Handle saving the frame, running prediction, publishing MQTT telemetry,
+    and uploading the compressed image to ThingsBoard telemetry as base64.
+    """
+    # Save image locally
+    filename = f"plant_{timestamp}.jpg"
+    filepath = os.path.join(SAVE_DIR, filename)
+    cv2.imwrite(filepath, frame)
 
-last_capture_time = time.time()
+    # Predict humidity
+    humidity = predict_humidity(frame) # TODO function to be changed with the correct one
+
+    # =========================
+    # SEND TELEMETRY (MQTT)
+    # =========================
+    telemetry = {
+        "humidity_percent": humidity,
+        "prediction_time": timestamp
+    }
+
+    client.publish(MQTT_TOPIC, json.dumps(telemetry), qos=1)
+    print(f"📡 Sent telemetry: {telemetry}")
+
+
+def start_camera_loop(device=0):
+    """
+    Open the webcam and run the capture loop; press 'q' to exit.
+    """
+    cap = cv2.VideoCapture(device)
+    if not cap.isOpened():
+        print("❌ Cannot open webcam")
+        return
+
+    print("📷 Webcam + IoT pipeline started")
+
+    last_capture_time = time.time()
+
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            cv2.imshow("Plant Monitoring", frame)
+
+            current_time = time.time()
+
+            if current_time - last_capture_time >= CAPTURE_INTERVAL:
+                timestamp = datetime.utcnow().isoformat()
+                process_capture(frame, timestamp)
+                last_capture_time = current_time
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
 
 # =========================
 # DUMMY HUMIDITY PREDICTOR
@@ -59,63 +108,12 @@ def predict_humidity(image):
     return round(random.uniform(30, 90), 2)
 
 # =========================
-# MAIN LOOP
+# MAIN (run loop)
 # =========================
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
-
-    cv2.imshow("Plant Monitoring", frame)
-
-    current_time = time.time()
-
-    if current_time - last_capture_time >= CAPTURE_INTERVAL:
-        timestamp = datetime.utcnow().isoformat()
-
-        # Save image locally
-        filename = f"plant_{timestamp}.jpg"
-        filepath = os.path.join(SAVE_DIR, filename)
-        cv2.imwrite(filepath, frame)
-
-        # Predict humidity
-        humidity = predict_humidity(frame)
-
-        # =========================
-        # SEND TELEMETRY (MQTT)
-        # =========================
-        telemetry = {
-            "humidity_percent": humidity,
-            "prediction_time": timestamp
-        }
-
-        client.publish(MQTT_TOPIC, json.dumps(telemetry), qos=1)
-        print(f"📡 Sent telemetry: {telemetry}")
-
-        # =========================
-        # SEND IMAGE (HTTP)
-        # =========================
-        with open(filepath, "rb") as image_file:
-            files = {
-                "plant_image": image_file
-            }
-            response = requests.post(IMAGE_UPLOAD_URL, files=files)
-
-            if response.status_code == 200:
-                print("🖼️ Image uploaded to ThingsBoard")
-            else:
-                print("⚠️ Image upload failed:", response.text)
-
-        last_capture_time = current_time
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-# =========================
-# CLEANUP
-# =========================
-cap.release()
-cv2.destroyAllWindows()
-client.loop_stop()
-client.disconnect()
-print("👋 Shutdown complete")
+if __name__ == '__main__':
+    try:
+        start_camera_loop()
+    finally:
+        client.loop_stop()
+        client.disconnect()
+        print("👋 Shutdown complete")
