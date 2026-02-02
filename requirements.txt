@@ -4,3 +4,8 @@ numpy
 scikit-learn
 pillow
 tqdm
+
+python-dotenv
+opencv-python
+paho-mqtt
+requests

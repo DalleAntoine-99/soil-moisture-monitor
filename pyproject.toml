@@ -2,6 +2,7 @@
 name = "soil-moisture-monitor"
 version = "0.1.0"
 description = ""
+package-mode = false
 authors = [
     {name = "DalleAntoine-99",email = "antoine.dalle59@gmail.com"}
 ]
