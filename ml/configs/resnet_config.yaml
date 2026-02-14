@@ -1,0 +1,28 @@
+# Configuration ResNet-50 Pipeline
+
+model:
+  name: "microsoft/resnet-50"
+  type: "resnet"
+  device: "auto"
+
+training:
+  test_size: 0.1
+  conformalize_size: 0.1
+  random_state: 42
+  ridge_alpha: 1.0
+  confidence_level: 0.95
+
+paths:
+  dataset: "ml/data/raw/Soil_Moisture_Dataset"  
+  labels: "ml/data/labels.csv"
+  model_output: "ml/models/ridge_regressor_resnet_mapie.joblib"
+
+preprocessing:
+  target_size: [224, 224]
+  normalize: true
+
+# Labels par catégorie (humidité moyenne en %)
+category_labels:
+  dry: 15.0       # Sol sec = ~15% humidité
+  moderate: 50.0  # Sol modéré = ~50% humidité
+  wet: 85.0       # Sol humide = ~85% humidité
