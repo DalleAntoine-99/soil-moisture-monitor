@@ -588,6 +588,24 @@ files = [
 ]
 
 [[package]]
+name = "mapie"
+version = "0.9.1"
+description = "A scikit-learn-compatible module for estimating prediction intervals."
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "MAPIE-0.9.1-py3-none-any.whl", hash = "sha256:1423fd3e4fa9ad31ef838d83d1c7d0003654cd8cd5f6a9c455723f90e1a0f352"},
+    {file = "MAPIE-0.9.1.tar.gz", hash = "sha256:465cf763d62a574fbb855232dd7222fa541c09fa9fdeaedcf6dae1fadcd7d8d3"},
+]
+
+[package.dependencies]
+numpy = ">=1.21"
+packaging = "*"
+scikit-learn = "*"
+scipy = "*"
+
+[[package]]
 name = "markdown-it-py"
 version = "4.0.0"
 description = "Python port of markdown-it. Markdown parsing, done right!"
@@ -2334,4 +2352,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.15"
-content-hash = "8ebc16733e072983169c6644f4064cea3693b8780e219a52fececb2959b6fa23"
+content-hash = "245b44d333581cb8df0e11bfb50abf35f2a4d70406fd65d30b682338905d2c5d"
