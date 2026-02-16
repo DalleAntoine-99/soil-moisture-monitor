@@ -42,6 +42,7 @@ env/
 *.key
 config/secrets.yaml
 *_token.txt
+vm/api/thingsboard_config.yaml
 
 # ML Models (use Git LFS instead)
 models/*.pt

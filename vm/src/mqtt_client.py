@@ -33,7 +33,7 @@ MQTT_TOPIC = os.getenv("MQTT_TOPIC", "v1/devices/me/telemetry")
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 # MQTT client
-client = mqtt.Client()
+client = mqtt.Client(callback_api_version=2)
 client.username_pw_set(ACCESS_TOKEN)
 client.connect(THINGSBOARD_HOST, MQTT_PORT, 60)
 client.loop_start()
